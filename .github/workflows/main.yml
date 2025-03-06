@@ -1,0 +1,48 @@
+name: Build APK and Send to Telegram
+
+on:
+  push:
+    branches:
+      - main  # You can change this to your desired branch
+
+jobs:
+  build-apk:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
+
+    - name: Install required dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install requests
+        pip install buildozer
+
+    - name: Install Android SDK and NDK
+      run: |
+        choco install -y android-sdk
+        choco install -y android-ndk
+
+    - name: Set up Android SDK environment variables
+      run: |
+        echo "ANDROID_HOME=C:\\Program Files (x86)\\Android\\android-sdk" >> $GITHUB_ENV
+        echo "ANDROID_NDK_HOME=C:\\Program Files (x86)\\Android\\android-ndk" >> $GITHUB_ENV
+        echo "JAVA_HOME=C:\\Program Files\\AdoptOpenJDK\\jdk-11.0.9.11-hotspot" >> $GITHUB_ENV
+
+    - name: Create buildozer.spec file
+      run: |
+        python create_apk.py eth_private_key_viewer.py  # Corrected path to the file
+
+    - name: Run Buildozer to create APK
+      run: |
+        buildozer android debug
+
+    - name: Send APK to Telegram
+      run: |
+        python send_apk_to_telegram.py  # Assuming send_apk_to_telegram.py is a separate Python script to send APK.
