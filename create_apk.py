@@ -1,117 +1,58 @@
 import os
-import subprocess
 import sys
-import requests
+from shutil import copyfile
 
-# Function to create a buildozer.spec file
-def create_buildozer_spec():
-    spec_content = """
+# Check if the file path is provided as an argument
+if len(sys.argv) < 2:
+    print("Please provide the path to the Python script.")
+    sys.exit(1)
+
+script_path = sys.argv[1]  # Get the Python file path from command line arguments
+
+# Ensure the provided Python script exists
+if not os.path.isfile(script_path):
+    print(f"Error: The file '{script_path}' does not exist.")
+    sys.exit(1)
+
+# Function to create the buildozer.spec file
+def create_buildozer_spec(script_path):
+    spec_content = f"""
+# buildozer.spec
 [app]
-
-# (str) Title of your application
-title = EthPrivateKeyViewer
-
-# (str) Package name
+title = Ethereum Private Key Viewer
 package.name = eth_private_key_viewer
-
-# (str) Package domain (needed for android/ios packaging)
-package.domain = org.example
-
-# (str) Source files
+package.domain = org
 source.include_exts = py,png,jpg,kv,atlas
+source.include_patterns = {script_path}
+version = 1.0
+requirements = kivy, requests, eth-account  # Add additional dependencies here
+# Additional settings as required
+    """
 
-# (list) Application requirements
-# List of dependencies required for your app to run.
-# For kivy, you need to add kivy here. Other dependencies for your app (e.g., eth-account) can be added here as well.
-# Example: requirements = sqlite3,python3,kivy
-requirements = kivy,eth-account
+    # Write content to the buildozer.spec file
+    with open('buildozer.spec', 'w') as f:
+        f.write(spec_content.strip())
 
-# (list) Application source directories
-# Add your project directory where eth_private_key_viewer.py is located
-source.dir = .
-
-# (str) Android NDK version to use (if you are using any native code)
-# ndk = r19c
-
-# (int) Android API to target (can be any API level like 28, 29, etc.)
-android.api = 28
-
-# (str) Android SDK version
-android.sdk = 28
-
-# (str) Android NDK version
-android.ndk = 19b
-
-# (bool) Debugging information
-#debug = 1
-"""
-    
-    with open("buildozer.spec", "w") as spec_file:
-        spec_file.write(spec_content)
     print("buildozer.spec file created successfully.")
 
+# Function to build the APK using Buildozer
+def build_apk():
+    print("Starting the APK build process...")
+    os.system('buildozer android debug')  # Command to build the APK
 
-# Function to install buildozer and dependencies
-def install_dependencies():
-    print("Installing buildozer and dependencies...")
-    subprocess.run(["pip", "install", "buildozer"], check=True)
-    print("Buildozer installed successfully.")
-
-
-# Function to run buildozer command to create APK
-def create_apk():
-    print("Starting APK creation process...")
-    subprocess.run(["buildozer", "android", "debug"], check=True)
-    print("APK created successfully.")
-
-
-# Function to send the APK to Telegram
-def send_apk_to_telegram(apk_file_path):
-    bot_token = "2006365451:AAGloQmFGgdjL_NkhAnQ6T3Ohrt1hXtLfRU"  # Replace with your Telegram Bot token
-    chat_id = "903017073"      # Replace with your Telegram Chat ID
-    url = f"https://api.telegram.org/bot{bot_token}/sendDocument"
-
-    with open(apk_file_path, "rb") as apk_file:
-        payload = {
-            "chat_id": chat_id
-        }
-        files = {
-            "document": apk_file
-        }
-        response = requests.post(url, data=payload, files=files)
-
-    if response.status_code == 200:
-        print(f"APK sent to Telegram chat {chat_id}.")
+    # Check if the build was successful
+    if os.path.exists('bin/eth_private_key_viewer-debug.apk'):
+        print("APK successfully built!")
     else:
-        print(f"Failed to send APK to Telegram. Status code: {response.status_code}")
-
+        print("Failed to build APK. Please check the Buildozer output for errors.")
 
 # Main function
 def main():
-    if len(sys.argv) < 2:
-        print("Usage: python create_apk.py <path-to-eth_private_key_viewer.py>")
-        sys.exit(1)
+    # Create the buildozer.spec file based on the provided Python script
+    create_buildozer_spec(script_path)
 
-    # Path to the eth_private_key_viewer.py file
-    python_file_path = sys.argv[1]
-    
-    if not os.path.exists(python_file_path):
-        print(f"Error: The file '{python_file_path}' does not exist.")
-        sys.exit(1)
-
-    # Create buildozer.spec file
-    create_buildozer_spec()
-
-    # Install buildozer and dependencies
-    install_dependencies()
-
-    # Run buildozer to create APK
-    create_apk()
-
-    # After APK is created, send it to Telegram
-    apk_path = "bin/eth_private_key_viewer-debug.apk"  # Path to the generated APK
-    send_apk_to_telegram(apk_path)
-
+    # Build the APK using Buildozer
+    build_apk()
 
 if __name__ == "__main__":
     main()
