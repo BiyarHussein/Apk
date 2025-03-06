@@ -37,7 +37,7 @@ jobs:
 
     - name: Create buildozer.spec file
       run: |
-        python create_apk.py path/to/eth_private_key_viewer.py
+        python create_apk.py eth_private_key_viewer.py  # Corrected path to the file
 
     - name: Run Buildozer to create APK
       run: |
