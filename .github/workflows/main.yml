@@ -1,16 +1,16 @@
-name: Build APK and Send to Telegram
+name: Build and Send APK
 
 on:
   push:
     branches:
-      - main  # You can change this to your desired branch
+      - main
 
 jobs:
   build-apk:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout Code
+    - name: Checkout code
       uses: actions/checkout@v2
 
     - name: Set up Python
@@ -18,31 +18,24 @@ jobs:
       with:
         python-version: '3.x'
 
-    - name: Install required dependencies
+    - name: Install Buildozer dependencies
       run: |
-        python -m pip install --upgrade pip
-        pip install requests
+        sudo apt-get update
+        sudo apt-get install -y python3-pip
         pip install buildozer
 
-    - name: Install Android SDK and NDK
+    - name: Install Android dependencies
       run: |
-        choco install -y android-sdk
-        choco install -y android-ndk
-
-    - name: Set up Android SDK environment variables
-      run: |
-        echo "ANDROID_HOME=C:\\Program Files (x86)\\Android\\android-sdk" >> $GITHUB_ENV
-        echo "ANDROID_NDK_HOME=C:\\Program Files (x86)\\Android\\android-ndk" >> $GITHUB_ENV
-        echo "JAVA_HOME=C:\\Program Files\\AdoptOpenJDK\\jdk-11.0.9.11-hotspot" >> $GITHUB_ENV
+        sudo apt-get install -y openjdk-8-jdk
+        sudo apt-get install -y android-sdk
 
     - name: Create buildozer.spec file
-      run: |
-        python create_apk.py eth_private_key_viewer.py  # Corrected path to the file
+      run: echo "ANDROID_HOME=/usr/lib/android-sdk" >> $GITHUB_ENV
 
-    - name: Run Buildozer to create APK
+    - name: Run APK build
       run: |
+        python create_apk.py eth_private_key_viewer.py
         buildozer android debug
 
     - name: Send APK to Telegram
-      run: |
-        python send_apk_to_telegram.py  # Assuming send_apk_to_telegram.py is a separate Python script to send APK.
+      run: python send_apk_to_telegram.py
